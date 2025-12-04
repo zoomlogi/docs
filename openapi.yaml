@@ -1,0 +1,2527 @@
+openapi: 3.0.3
+info:
+  title: ZoomLogi API
+  version: "1.0.1"
+  description: >
+    The ZoomLogi API provides endpoints for authentication, shipment creation & tracking,
+    alert management, as well as management of couriers, sensors, products and locations.
+servers:
+  - url: https://zoomlogi.com/api
+    description: Production Server
+  - url: https://uat.zoomlogi.com/api
+    description: Sandbox Server (Testing)
+
+tags:
+  - name: Authentication
+    description: Endpoints for obtaining access and refresh tokens.
+  - name: Shipments
+    description: Endpoints for shipment creation, retrieval and tracking.
+  - name: Alerts
+    description: Endpoints for managing alert configurations and intervention.
+  - name: Transport Providers
+  - name: Sensors
+  - name: Products
+    description: Endpoints for product management.
+  - name: Locations
+    description: Endpoints for location management.
+
+paths:
+  /auth/token/:
+    post:
+      tags: [Authentication]
+      summary: Obtain a ZoomLogi access token (user or client)
+      description: |
+        This endpoint can be used for:
+        - **Client login** using client_id and client_secret (Client Credentials flow).
+        - **User login** using email and password (Resource Owner Password Credentials flow).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ClientCredentialsRequest'   # <-- move client credentials first
+                - $ref: '#/components/schemas/TokenRequest'
+            examples:
+              ClientCredentialsExample:
+                summary: Client login (recommended)
+                value:
+                  client_id: "client_id"
+                  client_secret: "client_secret"
+              UserLoginExample:
+                summary: User login (alternative)
+                value:
+                  email: "user@example.com"
+                  password: "password123"
+      responses:
+        '200':
+          description: Token returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Invalid credentials supplied.
+
+  /company-transport-provider-details/:
+    get:
+      tags: [Transport Providers]
+      summary: List couriers configured for the current company
+      security: [ { OAuth2: [] } ]
+      responses:
+        '200':
+          description: A wrapped list of couriers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyTransportProviderResponse'
+        '404':
+          description: Not found
+
+  /onboarding/company-sensors/:
+    get:
+      tags: [Sensors]
+      summary: List sensors configured for the current company
+      security: [ { OAuth2: [] } ]
+      responses:
+        '200':
+          description: Wrapped list of sensors.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanySensorsResponse'
+
+  /onboarding/locations/v2/:
+    get:
+      tags: [Locations]
+      summary: List or search locations
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: address
+          schema: { type: string }
+      responses:
+        '200':
+          description: Wrapped list of locations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyLocationsResponse'
+  
+    post:
+      tags: [Locations]
+      summary: Create a new location
+      security: [ { OAuth2: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreate'
+      responses:
+        '201':
+          description: Location created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyLocationSingleResponse'
+
+  /onboarding/locations/v2/{location_id}/:
+    delete:
+      tags: [Locations]
+      summary: Archive a location
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: path
+          name: location_id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Location deleted successfully. No content returned.
+
+  /onboarding/products/:
+    get:
+      tags: [Products]
+      summary: List or search products
+      security: [ { OAuth2: [] } ]
+      responses:
+        '200':
+          description: Wrapped list of products.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyProductsResponse'
+  
+    post:
+      tags: [Products]
+      summary: Create a new product
+      security: [ { OAuth2: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Product created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyProductSingleResponse'
+
+  /onboarding/products/{product_id}/:
+    delete:
+      tags: [Products]
+      summary: Archive a product
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: path
+          name: product_id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Product deleted successfully. No content returned.
+
+  /alert-thresholds/:
+    get:
+      tags: [Alerts]
+      summary: Retrieve alert threshold settings
+      security: [ { OAuth2: [] } ]
+      responses:
+        '200':
+          description: Retrieved alert thresholds successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThresholdSettingsResponse'
+
+    post:
+      tags: [Alerts]
+      summary: Update alert threshold settings
+      security: [ { OAuth2: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThresholdSettingsRequest'
+      responses:
+        '200':
+          description: Alert thresholds updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThresholdSettingsResponse'
+
+  /api/shipment/alert/{alert_id}/ai-intervention/:
+    post:
+      tags: [Alerts]
+      summary: Initiate AI intervention for an alert
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: path
+          name: alert_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertAIInterventionRequest'
+      responses:
+        '202':
+          description: Intervention initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertAIInterventionResponse'
+
+    get:
+      tags: [Alerts]
+      summary: Retrieve AI intervention status and result
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: path
+          name: alert_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Intervention status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertAIInterventionResponse'
+
+
+  /alert/:
+    get:
+      tags: [Alerts]
+      summary: List alert configurations for your company
+      security: [ { OAuth2: [] } ]
+      responses:
+        '200':
+          description: Wrapped list of alerts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListResponse'
+  
+    post:
+      tags: [Alerts]
+      summary: Create or update a company alert configuration
+      security: [ { OAuth2: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertCreate'
+      responses:
+        '201':
+          description: Alert created or updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertSingleResponse'
+
+  /alert/{alert_id}/:
+    delete:
+      tags: [Alerts]
+      summary: Delete an alert configuration
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: path
+          name: alert_id
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Alert deleted successfully. No content returned.
+
+  /shipment/:
+    get:
+      tags:
+        - Shipments
+      summary: Search and retrieve shipments
+      description: |
+        Retrieves a paginated list of shipments using various filters.
+
+        **Filterable fields (`filterBy`)**:
+        - `from_location` (UUID of starting location)
+        - `to_location` (UUID of destination location)
+        - `type` (Health status of shipment)
+          - `0` = Critical Alert
+          - `1` = At Risk
+          - `2` = On Track
+        - `status` (Shipment status)
+          - `DELAYED`, `DELIVERED`, `IN-TRANSIT`, `CANCELLED`, `PENDING`, `ARCHIVED`, `AWAITING PICKUP`
+        - `delivery_status` (Delivery timing status)
+          - `On-Time`, `Late`, `Early`, `Unknown`
+        - `product` (UUID of the product)
+        - `product_type` (UUID of the product type)
+        - `project_id` (Text value of project name or ID)
+        - `scheduled_pickup_date` (Date range; JSON with `start` and `end`)
+        - `scheduled_delivery_date` (Date range; JSON with `start` and `end`)
+        - `courier` (UUID of the courier)
+      security:
+        - OAuth2: []
+      parameters:
+        - name: filterBy
+          in: query
+          description: Type of filter to apply.
+          required: false
+          schema:
+            type: string
+            enum: [from_location, to_location, type, status, delivery_status, product, product_type, project_id, scheduled_pickup_date, scheduled_delivery_date, courier]
+        - name: filterValue[]
+          in: query
+          description: Value(s) for the corresponding filterBy field.
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: page
+          in: query
+          description: Page number (default 1).
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          description: Number of results per page (default 10).
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of shipments retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchShipmentsResponse'
+        '400':
+          description: Invalid query parameters.
+        '401':
+          description: Unauthorized. Missing or invalid token.
+          
+  /shipment/refno/{reference_number}/:
+    get:
+      tags:
+        - Shipments
+      summary: Retrieve a shipment by reference number
+      description: |
+        Retrieves a full shipment record, including chain of custody, alerts, shipment polyline, shipment monitor and more.
+      security:
+        - OAuth2: []
+      parameters:
+        - in: path
+          name: reference_number
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentDetailsResponse'
+        '400':
+          description: Invalid reference number.
+        '404':
+          description: Shipment not found.
+
+  /shipment/track/:
+    post:
+      tags: [Shipments]
+      summary: Create and begin tracking a shipment
+      security: [{ OAuth2: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentTrackCreate'
+      responses:
+        '201':
+          description: Shipment created and tracking started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentDetailsResponse'
+                
+  /api/shipment/share-shipment/:
+    post:
+      tags: [Shipments]
+      summary: Create a shareable shipment link
+      security: [ { OAuth2: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareShipmentRequest'
+      responses:
+        '200':
+          description: Share link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareShipmentResponse'
+                
+  /shipment/shipment-archive/{shipment_id}/:
+    delete:
+      tags: [Shipments]
+      summary: Archive an existing shipment
+      security: [ { OAuth2: [] } ]
+      parameters:
+        - in: path
+          name: shipment_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID of the shipment to archive
+      responses:
+        '204':
+          description: Shipment archived successfully. No content returned.
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://zoomlogi.com/api/auth/token/
+          scopes: {}
+
+  schemas:
+
+    # ====================================================
+    # 1. Authentication (tag order)
+    # ====================================================
+
+    ClientCredentialsRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          example: "client_id"
+        client_secret:
+          type: string
+          example: "client_secret"
+      required: [client_id, client_secret]
+
+    TokenRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          example: "strongpassword"
+      required: [email, password]
+
+    TokenResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        is_success:
+          type: boolean
+        messageTypeId:
+          type: string
+        refresh:
+          type: string
+        access:
+          type: string
+
+    # ====================================================
+    # 2. Shipments
+    #    (ordered by endpoint usage)
+    # ====================================================
+
+    # --- Listing & summary ---
+    SearchShipmentsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Records fetched successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 2
+        data:
+          type: array
+          description: List of shipments
+          items:
+            $ref: '#/components/schemas/ShipmentSummary'
+
+    ShipmentSummary:
+      type: object
+      description: Minimal shipment object for list view
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "4adb6a75-7c3b-448d-8014-87d19bd4e7ad"
+        reference_number:
+          type: string
+          example: "93458"
+        courier_tracking_id:
+          type: string
+          example: "772629715348"
+        status:
+          type: string
+          enum: [AWAITING_PICKUP, IN-TRANSIT, DELIVERED, ARCHIVED, DELAYED, CANCELLED, PENDING]
+          example: "IN-TRANSIT"
+        delivery_status:
+          type: string
+          enum: [On-Time, Late, Early, Unknown]
+          example: "On-Time"
+        type:
+          type: string
+          example: "2"
+        estimated_delivery_date:
+          type: string
+          format: date-time
+          example: "2025-03-16T19:00:00Z"
+        latest_location:
+          type: object
+          properties:
+            latest_lat:
+              type: number
+              format: float
+              example: 44.9537029
+            latest_long:
+              type: number
+              format: float
+              example: -93.0899578
+
+    # --- Create / track shipment ---
+    ShipmentTrackCreate:
+      type: object
+      required:
+        - courier_tracking_id
+        - courier
+        - reference_number
+        - products
+      properties:
+        courier_tracking_id:
+          type: string
+          example: "287677609189"
+        courier:
+          type: string
+          format: uuid
+          description: Courier ID
+          example: "3a4ceea5-3bf5-493e-9c8b-b9d00e5bc4ac"
+        reference_number:
+          type: string
+          example: "573920204857"
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["de8b752c-2eab-46d3-a27e-d561b94a8753"]
+        from_location:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Torrance"
+            address:
+              type: string
+              example: "Torrance, CA"
+            latitude:
+              type: number
+              format: float
+              example: 33.8369217
+            longitude:
+              type: number
+              format: float
+              example: -118.3407451
+            id:
+              type: string
+              example: "ChIJ096zWNFK3YARHmYKTm7TS60"
+            placeName:
+              type: string
+              example: "Torrance, CA"
+            polygon:
+              type: array
+              items:
+                type: object
+                properties:
+                  lat:
+                    type: number
+                    format: float
+                  lng:
+                    type: number
+                    format: float
+        to_location:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Fort Worth"
+            address:
+              type: string
+              example: "Fort Worth, TX"
+            latitude:
+              type: number
+              format: float
+              example: 32.7554883
+            longitude:
+              type: number
+              format: float
+              example: -97.3307658
+            id:
+              type: string
+              example: "ChIJrQfILRJuToYRvaxp3fiLr6Q"
+            placeName:
+              type: string
+              example: "Fort Worth, TX"
+            polygon:
+              type: array
+              items:
+                type: object
+                properties:
+                  lat:
+                    type: number
+                    format: float
+                  lng:
+                    type: number
+                    format: float
+        shipment_alert:
+          $ref: '#/components/schemas/ShipmentAlertCreate'
+        teams:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["4683c264-bfa1-410e-acc3-2885f89525a7"]
+        sensor_tracking_id:
+          type: string
+          nullable: true
+          example: "test_id"
+        sensor:
+          type: string
+          format: uuid
+          nullable: true
+          example: "2daa2481-9d7c-46fb-99a8-a3811816a849"
+        id:
+          type: string
+          nullable: true
+          example: null
+
+    # --- Shipment details (by reference/ID) ---
+    ShipmentDetailsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Shipment Fetched Successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          $ref: '#/components/schemas/ShipmentFullDetails'
+
+    ShipmentFullDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference_number:
+          type: string
+        courier_tracking_id:
+          type: string
+        sensor_tracking_id:
+          type: string
+          nullable: true
+        courier_service_type:
+          type: string
+          nullable: true
+        courier_service_level:
+          type: string
+          nullable: true
+        status:
+          type: string
+        delivery_status:
+          type: string
+        type:
+          type: integer
+          description: Health status (0 = Critical, 1 = At Risk, 2 = On Track, 3 = Completed)
+        scheduled_pickup_date:
+          type: string
+          format: date-time
+        actual_pickup_date:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_delivery_date:
+          type: string
+          format: date-time
+        estimated_delivery_date:
+          type: string
+          format: date-time
+        actual_delivery_date:
+          type: string
+          format: date-time
+          nullable: true
+        transport_provider_eta:
+          type: string
+          format: date-time
+        temperature_min:
+          type: number
+        temperature_max:
+          type: number
+        humidity_max:
+          type: number
+        distance_traveled_km:
+          type: number
+        contact_phone:
+          type: string
+          nullable: true
+        weight_kg:
+          type: number
+        volume_m3:
+          type: number
+        volume:
+          type: string
+          nullable: true
+        latest_location:
+          type: object
+          properties:
+            latest_lat:
+              type: number
+            latest_long:
+              type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+          nullable: true
+        updated_by:
+          type: string
+          nullable: true
+        is_archived:
+          type: boolean
+        expected_recipient_name:
+          type: string
+          nullable: true
+        transport_provider_pod_name:
+          type: string
+          nullable: true
+        company:
+          type: string
+          format: uuid
+        product:
+          $ref: '#/components/schemas/Product'
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+        from_location:
+          $ref: '#/components/schemas/Location'
+        to_location:
+          $ref: '#/components/schemas/Location'
+        courier:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+        sensor:
+          $ref: '#/components/schemas/Sensor'
+        alert_info:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertInfo'
+        shipment_insights:
+          $ref: '#/components/schemas/ShipmentInsights'
+        chain_of_custody:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChainOfCustody'
+        shipment_polyline:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentPolyline'
+        shipment_monitor:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShipmentMonitor'
+        monitor_info:
+          $ref: '#/components/schemas/MonitorInfo'
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+
+    # --- Share shipment link ---
+    ShareShipmentRequest:
+      type: object
+      required:
+        - shipment
+      properties:
+        shipment:
+          type: string
+          format: uuid
+          description: ID of the shipment to share
+          example: "3dd35e1d-d984-4b09-9d8e-0214f35db444"
+        show_product_details:
+          type: boolean
+          description: Whether to display product details
+          example: false
+        show_alerts:
+          type: boolean
+          description: Whether to display alerts
+          example: false
+        require_password:
+          type: boolean
+          description: Whether password protection is required
+          example: false
+        password:
+          type: string
+          nullable: true
+          description: Password for the shared link, if required
+          example: null
+
+    ShareShipmentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "ShareShipmentDetail created successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 0
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "e7db33e8-5ec4-4026-862c-4cd5348eb579"
+            created_at:
+              type: string
+              format: date-time
+              example: "2025-04-28T21:49:15.180261Z"
+            updated_at:
+              type: string
+              format: date-time
+              example: "2025-04-28T21:49:15.180272Z"
+            password:
+              type: string
+              nullable: true
+              example: null
+            token:
+              type: string
+              format: uuid
+              example: "df4bb109-784c-4149-a054-ecf654896b56"
+            show_product_details:
+              type: boolean
+              example: false
+            show_alerts:
+              type: boolean
+              example: false
+            require_password:
+              type: boolean
+              example: false
+            created_by:
+              type: integer
+              nullable: true
+            updated_by:
+              type: integer
+              nullable: true
+            shipment:
+              type: string
+              format: uuid
+              example: "3dd35e1d-d984-4b09-9d8e-0214f35db444"
+            url:
+              type: string
+              example: "https://zoomlogi.com/share/shipment/external-view/3dd35e1d-d984-4b09-9d8e-0214f35db444/a8faa7f5-6750-4682-ae1a-a938b3b419e2"
+
+    # --- Shipment alert (inline on create) ---
+    ShipmentAlertCreate:
+      type: object
+      properties:
+        alert_types:
+          type: array
+          items:
+            type: string
+          example: ["SLOW_TO_OFFLOAD","TEMPERATURE_EXCURSION"]
+        is_pickup_confirmation:
+          type: boolean
+          example: false
+        is_delivery_confirmation:
+          type: boolean
+          example: false
+        notification_method:
+          type: string
+          enum: [EMAIL, SMS, WHATSAPP, TEAMS, SLACK]
+          example: "EMAIL"
+        send_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertSendTo'
+
+    # --- Nested / support objects ---
+    ShipmentInsights:
+      type: object
+      properties:
+        zl_eta:
+          type: object
+          properties:
+            eta:
+              type: string
+              format: date-time
+            earliest_arrival_p90:
+              type: string
+              format: date-time
+            latest_arrival_p90:
+              type: string
+              format: date-time
+        event_progression:
+          type: object
+          properties:
+            latest_event_update_name:
+              type: string
+            latest_event_update_time:
+              type: string
+              format: date-time
+            expected_next_event_update_name:
+              type: string
+            expected_next_event_update_time:
+              type: string
+              format: date-time
+            expected_next_event_update_time_p90:
+              type: string
+              format: date-time
+        flight_info:
+          type: object
+          properties:
+            prediction:
+              type: boolean
+            flight_number:
+              type: string
+            scheduled_departure:
+              type: string
+              format: date-time
+            actual_departure:
+              type: string
+              format: date-time
+              nullable: true
+            scheduled_arrival:
+              type: string
+              format: date-time
+              nullable: true
+            actual_arrival:
+              type: string
+              format: date-time
+              nullable: true
+        weather_on_route:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              severity:
+                type: string
+              location:
+                type: string
+              location_polygon:
+                type: string
+              start_time:
+                type: string
+                format: date-time
+              end_time:
+                type: string
+                format: date-time
+              route_start_time:
+                type: string
+                format: date-time
+
+    MonitorInfo:
+      type: object
+      properties:
+        temperature:
+          type: number
+          format: float
+          example: 10.09
+        humidity:
+          type: number
+          format: float
+          example: 43.9
+        pressure:
+          type: number
+          format: float
+          nullable: true
+          example: 1000
+        battery:
+          type: integer
+          example: 98
+        shock:
+          type: number
+          format: float
+          nullable: true
+          example: 3.3
+          description: Maximum shock value detected during shipment (in g-force)
+        tilt:
+          type: number
+          format: float
+          nullable: true
+          example: 12
+          description: Maximum tilt angle detected during shipment (in degrees)
+        light:
+          type: integer
+          example: 0
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-02-20T19:46:22Z"
+
+    AlertInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        alert_name:
+          type: string
+        alert_detail:
+          type: string
+        recommended_action:
+          type: string
+        alert_type:
+          type: string
+        is_critical:
+          type: boolean
+        is_resolved:
+          type: boolean
+        is_dismissed:
+          type: boolean
+        comment:
+          type: string
+          nullable: true
+
+    ShipmentPolyline:
+      type: object
+      properties:
+        polyline:
+          type: array
+          description: List of GPS or sensor readings along the route
+          items:
+            type: object
+            properties:
+              shipment_id:
+                type: string
+                format: uuid
+              temperature:
+                type: string
+              latitude:
+                type: number
+                format: float
+              longitude:
+                type: number
+                format: float
+              battery:
+                type: string
+              humidity:
+                type: string
+                nullable: true
+              light:
+                type: string
+              lat_updated:
+                type: string
+                format: date-time
+        mode:
+          type: string
+          description: "truck, air, rail, ocean"
+        status:
+          type: string
+          description: "travelled, pending, delayed, etc."
+
+    ShipmentMonitor:
+      type: object
+      properties:
+        shipment_id:
+          type: string
+          format: uuid
+        temperature:
+          type: number
+          format: float  
+          example: 10.09
+        latitude:
+          type: number
+          format: float
+          example: 41.910624
+        longitude:
+          type: number
+          format: float
+          example: -87.672826
+        battery:
+          type: number
+          format: float  
+          example: 98
+        humidity:
+          type: number
+          format: float 
+          example: 43.9
+        shock:
+          type: number
+          format: float
+          example: 3.3
+        tilt:
+          type: number
+          format: float  
+          example: 12
+        light:
+          type: number
+          format: float  
+        updated_at:
+          type: string
+          format: date-time
+
+    ChainOfCustody:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        shipment_id:
+          type: string
+          format: uuid
+          nullable: true
+        location:
+          type: string
+        handler:
+          type: string
+        action:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        created_by:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        type:
+          type: integer
+          description: |
+            1 = System Event (comment, ETA update)
+            2 = Standard Chain of Custody Event
+            3 = Alert Event
+
+    # --- Base shipment entities (reused) ---
+    Shipment:
+      type: object
+      properties:
+        shipment_id:
+          type: string
+        reference_number:
+          type: string
+          nullable: true
+        transport_provider:
+          type: string
+        tracking_number:
+          type: string
+        product:
+          $ref: '#/components/schemas/AlertInfo'
+        status:
+          type: string
+          enum: [AWAITING_PICKUP, IN_TRANSIT, DELIVERED, ARCHIVED]
+        zl_eta:
+          type: string
+          format: date-time
+          nullable: true
+        active_alert:
+          type: boolean
+
+    ShipmentDetails:
+      allOf:
+        - $ref: '#/components/schemas/Shipment'
+        - type: object
+          properties:
+            provider_eta:
+              type: string
+              format: date-time
+              nullable: true
+            alert_info:
+              type: object
+              additionalProperties: true
+            shipment_insights:
+              type: object
+              additionalProperties: true
+            chain_of_custody:
+              type: array
+              items:
+                $ref: '#/components/schemas/ChainOfCustody'
+            shipment_monitor:
+              type: array
+              items:
+                $ref: '#/components/schemas/ShipmentMonitor'
+
+    # ====================================================
+    # 3. Alerts
+    # ====================================================
+
+    ThresholdSettingsRequest:
+      type: object
+      properties:
+        battery_charge_at_origin_pct:
+          type: number
+          format: float
+          example: 80
+        ignore_measurement_at_start:
+          type: integer
+          example: 10
+        flight_delay_buffer_minutes:
+          type: integer
+          example: 20
+        late_to_pickup_buffer_minutes:
+          type: integer
+          example: 30
+        not_loaded_onto_flight_minutes:
+          type: integer
+          example: 20
+        recovery_pickup_buffer_minutes:
+          type: integer
+          example: 20
+        slow_to_offload_buffer_minutes:
+          type: integer
+          example: 20
+        cant_find_location_buffer_minutes:
+          type: integer
+          example: 20
+        wrong_address_buffer_feet:
+          type: integer
+          example: 500
+        battery_charge_in_transit_pct:
+          type: number
+          format: float
+          example: 20
+        flight_cargo_hrs_buffer_minutes:
+          type: integer
+          example: 30
+        not_moving_time_threshold_minutes:
+          type: integer
+          example: 30
+        status_progression_buffer_factor:
+          type: number
+          format: float
+          example: 1.5
+        temp_at_risk_threshold_pct:
+          type: number
+          format: float
+          example: 10
+        temp_excursion_buffer_minutes:
+          type: integer
+          example: 0
+        viability_exhausted_buffer_minutes:
+          type: integer
+          example: 0
+        viability_to_eta_buffer_minutes:
+          type: integer
+          example: 120
+        viability_to_expiration_buffer_minutes:
+          type: integer
+          example: 60
+        weather_severity_level:
+          type: string
+          example: "L3"
+        humidity_excursion_buffer_minutes:
+          type: number
+          format: float
+          example: 30
+        light_excursion_buffer_minutes:
+          type: integer
+          example: 30
+        pressue_excursion_buffer_minutes:
+          type: number
+          format: float
+          example: 30
+        tilt__excursion_buffer_minutes:
+          type: number
+          format: float
+          example: 15
+
+    ThresholdSettingsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Threshold settings retrieved successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          $ref: '#/components/schemas/ThresholdSettingsRequest'
+
+    AlertAIInterventionRequest:
+      type: object
+      required:
+        - method
+      properties:
+        method:
+          type: string
+          enum: [EMAIL, PHONE]
+          example: "EMAIL"
+          description: Preferred method for AI intervention (email or phone call)
+
+    AlertAIInterventionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "AI intervention status retrieved successfully."
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          $ref: '#/components/schemas/AlertAIIntervention'
+
+    AlertAIIntervention:
+      type: object
+      properties:
+        alert_id:
+          type: string
+          format: uuid
+          example: "fd3cda6a-f6a2-477a-8e66-1f365a9c5a8e"
+        status:
+          type: string
+          enum: [IN_PROGRESS, CLOSED]
+          example: "CLOSED"
+        outcome:
+          type: string
+          nullable: true
+          enum: [RESOLVED, NOT_ANSWERED, INCORRECT_POC, INCONCLUSIVE]
+          example: null
+          description: Outcome of intervention if status is CLOSED
+        summary:
+          type: string
+          nullable: true
+          example: "Spoke with contact and confirmed shipment will be ready by 3pm."
+          description: Summary of resolution if available
+        transcript:
+          type: string
+          nullable: true
+          example: "Agent: Hello, is this the receiving department?... Contact: Yes, speaking..."
+          description: Full transcript of the interaction if available
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-04-28T22:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-04-28T22:30:00Z"
+
+    AlertCreate:
+      type: object
+      required:
+        - alert_type
+        - is_critical
+        - is_at_risk
+        - is_pickup_confirmation
+        - is_delivery_confirmation
+        - notification_method
+        - frequency
+      properties:
+        alert_type:
+          type: string
+          example: "CRITICAL_ALERT"
+        is_critical:
+          type: boolean
+          example: false
+        is_at_risk:
+          type: boolean
+          example: true
+        is_pickup_confirmation:
+          type: boolean
+          example: false
+        is_delivery_confirmation:
+          type: boolean
+          example: false
+        location:
+          type: string
+          nullable: true
+          example: null
+        change_by:
+          type: string
+          nullable: true
+          example: null
+        products:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["23a0293c-615e-4e91-9aaf-6b14af38d678"]
+        frequency:
+          type: string
+          enum: [ONCE_A_DAY, TWICE_A_DAY, EVERY_HOUR]
+          example: "ONCE_A_DAY"
+        time_1:
+          type: string
+          nullable: true
+          example: "3:00pm"
+        time_2:
+          type: string
+          nullable: true
+          example: null
+        day:
+          type: string
+          nullable: true
+          example: null
+        notification_method:
+          type: string
+          enum: [EMAIL, MOBILE, SMS]
+          example: "EMAIL"
+        send_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertSendTo'
+        teams:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    AlertListResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Company alert fetched successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertDetails'
+
+    AlertSingleResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Company alert created successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          $ref: '#/components/schemas/AlertDetails'
+
+    AlertDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          type: string
+          nullable: true
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertProduct'
+        recipient_to:
+          type: array
+          items:
+            type: string
+        teams:
+          type: array
+          items:
+            type: string
+            format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        is_archived:
+          type: boolean
+        is_critical:
+          type: boolean
+        is_at_risk:
+          type: boolean
+        is_pickup_confirmation:
+          type: boolean
+        is_delivery_confirmation:
+          type: boolean
+        alert_type:
+          type: string
+        notification_method:
+          type: string
+        notification_channel:
+          type: string
+          nullable: true
+        frequency:
+          type: string
+        time_1:
+          type: string
+          nullable: true
+        time_2:
+          type: string
+          nullable: true
+        day:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        change_by:
+          type: string
+          nullable: true
+        created_by:
+          type: integer
+        updated_by:
+          type: integer
+        company:
+          type: string
+          format: uuid
+        users:
+          type: array
+          items:
+            type: object
+        send_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/AlertSendTo'
+        created_by_name:
+          type: string
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+
+    AlertProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    AlertSendTo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Oncology"
+        select_all:
+          type: boolean
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+
+    # ====================================================
+    # 4. Transport Providers
+    # ====================================================
+
+    CompanyTransportProviderResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Company and couriers retrieved successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          $ref: '#/components/schemas/CompanyTransportProviderDetails'
+
+    CompanyTransportProviderDetails:
+      type: object
+      properties:
+        company_id:
+          type: string
+          format: uuid
+          example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+        couriers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransportProviderCourier'
+
+    TransportProviderCourier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "829d18ff-30ab-4899-8305-7a97eee260c3"
+        courier_name:
+          type: string
+          example: "FedEx"
+        description:
+          type: string
+          example: ""
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransportProviderTeam'
+        status:
+          type: string
+          example: "linked"
+        contact:
+          type: array
+          items:
+            type: object
+            description: Contact information (empty array for now)
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+
+    TransportProviderTeam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "4835dc3f-a68d-4f39-a7f9-1710c4f4171d"
+        name:
+          type: string
+          example: "Default"
+
+    # ====================================================
+    # 5. Sensors
+    # ====================================================
+
+    CompanySensorsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Sensors Fetched Successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanySensor'
+
+    CompanySensor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "4b319c91-0dca-4b89-b64f-5fcb0219f7dd"
+        company:
+          type: string
+          format: uuid
+          example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+        sensor_name:
+          type: string
+          example: "Tive"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-04-17T00:56:25.337597Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-04-17T01:27:08.786284Z"
+        status:
+          type: string
+          example: "Connected"
+        description:
+          type: string
+          example: "Tive Sensor Connection"
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransportProviderTeam'
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+
+    # ====================================================
+    # 6. Products
+    # ====================================================
+
+    CompanyProductsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Products Fetched Successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompanyProduct'
+
+    CompanyProductSingleResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Products updated successfully"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          type: object
+          properties:
+            updated_products:
+              type: object
+              nullable: true
+            created_products:
+              $ref: '#/components/schemas/CompanyProduct'
+            errors:
+              type: object
+              nullable: true
+
+    ProductCreate:
+      type: object
+      required:
+        - name
+        - product_type
+        - stage_of_development
+        - project_id
+        - viability_window
+        - temperature_range
+        - temperature_min
+        - temperature_max
+        - temperature_unit
+        - temp_range_is_custom
+        - teams
+      properties:
+        name:
+          type: string
+          example: "Product Name"
+        product_type:
+          type: string
+          format: uuid
+          example: "fd98dab0-2488-475c-843f-601c1c0d5895"
+        stage_of_development:
+          type: string
+          example: "Clinical Stage 3"
+        project_id:
+          type: string
+          example: "Proj-123"
+        viability_window:
+          type: integer
+          example: 100
+        temperature_range:
+          type: string
+          example: "refrigerated"
+        temperature_min:
+          type: number
+          format: float
+          example: 2
+        temperature_max:
+          type: number
+          format: float
+          example: 8
+        temperature_unit:
+          type: string
+          example: "C"
+        temp_range_is_custom:
+          type: boolean
+          example: false
+        shock_threshold:
+          type: number
+          format: float
+          nullable: true
+          example: 3.3
+        shock_duration_minutes:
+          type: integer
+          nullable: true
+          example: 30
+        light_threshold:
+          type: integer
+          nullable: true
+          example: 200
+        humidity_min:
+          type: number
+          format: float
+          nullable: true
+          example: 20.0
+        humidity_max:
+          type: number
+          format: float
+          nullable: true
+          example: 80.0
+        pressure_min:
+          type: number
+          format: float
+          nullable: true
+          example: 980.0
+        pressure_max:
+          type: number
+          format: float
+          nullable: true
+          example: 1020.0
+        teams:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example:
+            - "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          example: null
+        commercial_value:
+          type: string
+          nullable: true
+          example: "$10k-$50k"
+
+    CompanyProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "23a0293c-615e-4e91-9aaf-6b14af38d678"
+        name:
+          type: string
+          example: "Samples"
+        description:
+          type: string
+          nullable: true
+          example: null
+        product_type:
+          type: string
+          format: uuid
+          example: "53566072-cddb-41bc-bb02-b9cc0212f474"
+        temperature_min:
+          type: string
+          example: "-40.00"
+        temperature_max:
+          type: string
+          example: "-20.00"
+        temperature_breach_duration:
+          type: string
+          nullable: true
+          example: null
+        commercial_value:
+          type: string
+          nullable: true
+          example: "$10k-$50k"
+        is_active:
+          type: boolean
+          example: true
+        company:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+            name:
+              type: string
+              example: "ACME Corp"
+        temperature_range:
+          type: string
+          example: "deep_frozen"
+        viability_window:
+          type: integer
+          example: 100
+        temp_range_is_custom:
+          type: boolean
+          example: false
+        temperature_unit:
+          type: string
+          example: "C"
+        latitude:
+          type: number
+          format: float
+          nullable: true
+        longitude:
+          type: number
+          format: float
+          nullable: true
+        polygon:
+          type: object
+          nullable: true
+        is_commercial:
+          type: boolean
+          example: false
+        stage_of_development:
+          type: string
+          example: "Clinical Stage 1"
+        project_id:
+          type: string
+          example: "SAMP-100"
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductTeam'
+        product_name:
+          type: string
+          example: "Vaccines (mRNA)"
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+        shock_threshold:
+          type: number
+          format: float
+          nullable: true
+          example: 3.3
+        light_threshold:
+          type: integer
+          nullable: true
+          example: 200
+        humidity_min:
+          type: number
+          format: float
+          nullable: true
+          example: 20.0
+        humidity_max:
+          type: number
+          format: float
+          nullable: true
+          example: 80.0
+        pressure_min:
+          type: number
+          format: float
+          nullable: true
+          example: 980.0
+        pressure_max:
+          type: number
+          format: float
+          nullable: true
+          example: 1020.0
+
+    ProductTeam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+        name:
+          type: string
+          example: "Oncology"
+
+    # ====================================================
+    # 7. Locations
+    # ====================================================
+
+    CompanyLocationsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Locations Fetched Successfully!"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/CompanyLocation'
+            current_page:
+              type: integer
+              example: 1
+            next_page:
+              type: integer
+              nullable: true
+              example: null
+            previous_page:
+              type: integer
+              nullable: true
+              example: null
+            total_pages:
+              type: integer
+              example: 1
+            total_items:
+              type: integer
+              example: 2
+
+    CompanyLocationSingleResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "LocationV2s updated successfully"
+        status:
+          type: integer
+          example: 200
+        is_success:
+          type: boolean
+          example: true
+        messageTypeId:
+          type: string
+          example: "Success"
+        page_count:
+          type: integer
+          example: 1
+        data:
+          type: object
+          properties:
+            updated_locations:
+              type: object
+              nullable: true
+            created_locations:
+              $ref: '#/components/schemas/CompanyLocation'
+            errors:
+              type: object
+              nullable: true
+
+    LocationCreate:
+      type: object
+      required:
+        - name
+        - address
+        - contacts
+      properties:
+        name:
+          type: string
+          example: "Test Location"
+        address:
+          type: string
+          example: "259 E Erie St, Chicago, IL 60611"
+        facility_type:
+          type: string
+          nullable: true
+          example: "RETAIL"
+        latitude:
+          type: number
+          format: float
+          example: 41.89369130000001
+        longitude:
+          type: number
+          format: float
+          example: -87.620953
+        polygon:
+          type: array
+          items:
+            type: object
+            properties:
+              lat:
+                type: number
+                format: float
+              lng:
+                type: number
+                format: float
+        receiving_hours:
+          type: object
+          nullable: true
+          properties:
+            start:
+              type: string
+              format: date-time
+              example: "2025-04-23T17:03:00.000Z"
+            end:
+              type: string
+              format: date-time
+              example: "2025-04-23T23:07:00.000Z"
+        contacts:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+                example: "1"
+              name:
+                type: string
+                example: "Fred Smith"
+              title:
+                type: string
+                example: "Manager"
+              email:
+                type: string
+                example: "fred@location.com"
+              phone_number:
+                type: string
+                example: "+1 (583) 938-5932"
+              country_code:
+                type: string
+                example: ""
+              is_primary_contact:
+                type: boolean
+                example: true
+        teams:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example:
+            - "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+        id:
+          type: string
+          nullable: true
+          example: null
+
+    CompanyLocation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "33a49369-1d03-4836-b24f-289036baee99"
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationContact'
+        company:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+            name:
+              type: string
+              example: "0416admin"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        is_archived:
+          type: boolean
+          example: false
+        name:
+          type: string
+          example: "Test Location"
+        address:
+          type: string
+          example: "259 E Erie St, Chicago, IL 60611"
+        latitude:
+          type: number
+          format: float
+          example: 41.89369130000001
+        longitude:
+          type: number
+          format: float
+          example: -87.620953
+        polygon:
+          type: array
+          items:
+            type: object
+            properties:
+              lat:
+                type: number
+                format: float
+              lng:
+                type: number
+                format: float
+        receiving_hours:
+          type: object
+          nullable: true
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        facility_type:
+          type: string
+          nullable: true
+          example: "RETAIL"
+        created_by:
+          type: integer
+        updated_by:
+          type: integer
+          nullable: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocationTeam'
+        key_contact_name:
+          type: string
+          nullable: true
+          example: "Fred Smith"
+        key_contact_email:
+          type: string
+          nullable: true
+          example: "fred@location.com"
+        key_contact_phone_number:
+          type: string
+          nullable: true
+          example: "+1 (583) 938-5932"
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+
+    LocationContact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        phone_number:
+          type: string
+          nullable: true
+        is_primary_contact:
+          type: boolean
+        title:
+          type: string
+        country_code:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    LocationTeam:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+        name:
+          type: string
+          example: "Team Member"
+
+    # ====================================================
+    # 8. Common / Shared
+    # ====================================================
+
+    Permissions:
+      type: object
+      properties:
+        is_create:
+          type: boolean
+          example: true
+        is_update:
+          type: boolean
+          example: true
+        is_delete:
+          type: boolean
+          example: true
+        is_view:
+          type: boolean
+          example: true
+        create_self:
+          type: boolean
+          example: false
+
+    Location:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "06b135e5-2ea7-4171-93c2-01eb9ed5f443"
+        name:
+          type: string
+          example: "Chicago Hospital"
+        parsed_address:
+          type: object
+          properties:
+            PlaceName:
+              type: string
+              example: "Chicago"
+            StateName:
+              type: string
+              example: "IL"
+            AddressType:
+              type: string
+              example: "Street Address"
+            ZipCode:
+              type: string
+              example: "60622"
+        address:
+          type: string
+          example: "1800 W North Ave, Chicago, IL 60622"
+        polygon:
+          type: array
+          items:
+            type: object
+            properties:
+              lat:
+                type: number
+                format: float
+              lng:
+                type: number
+                format: float
+        latlng:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: float
+              example: 41.9107756
+            lng:
+              type: number
+              format: float
+              example: -87.6729537
+
+    Sensor:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "K691109"
+        sensor_id:
+          type: string
+          format: uuid
+          example: "87f76401-3f52-4d30-aa5f-c6d7182dc318"
+        type:
+          type: string
+          example: "Tive"
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          nullable: true
+          example: "f777b66c-6909-40d7-8c87-21b9e0c6f073"
+        name:
+          type: string
+          example: "CoolPharma Vaccine"
+        project_id:
+          type: string
+          example: "Ambient Pharma"
+        temperature_range:
+          type: string
+          example: "2-8C"
+        quantity:
+          type: integer
+          example: 10
+        temperature_min:
+          type: number
+          format: float
+          nullable: true
+          example: 2.0
+        temperature_max:
+          type: number
+          format: float
+          nullable: true
+          example: 8.0
+        temperature_unit:
+          type: string
+          example: "C"
+        viability_window:
+          type: string
+          example: "48h"
+        commercial_value:
+          type: number
+          format: float
+          example: 15000.0
+        product_type:
+          type: string
+          example: "Vaccine"
