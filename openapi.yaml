@@ -564,7 +564,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "4adb6a75-7c3b-448d-8014-87d19bd4e7ad"
+          example: "a9b0c1d2-e3f4-4a5b-6c7d-8e9f0a1b2c3d"
         reference_number:
           type: string
           example: "93458"
@@ -614,7 +614,7 @@ components:
           type: string
           format: uuid
           description: Courier ID
-          example: "3a4ceea5-3bf5-493e-9c8b-b9d00e5bc4ac"
+          example: "d2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a"
         reference_number:
           type: string
           example: "573920204857"
@@ -623,7 +623,7 @@ components:
           items:
             type: string
             format: uuid
-          example: ["de8b752c-2eab-46d3-a27e-d561b94a8753"]
+          example: ["d0e1f2a3-b4c5-4d6e-7f8a-9b0c1d2e3f4a"]
         from_location:
           type: object
           properties:
@@ -699,7 +699,7 @@ components:
           items:
             type: string
             format: uuid
-          example: ["4683c264-bfa1-410e-acc3-2885f89525a7"]
+          example: ["c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f"]
         sensor_tracking_id:
           type: string
           nullable: true
@@ -708,7 +708,7 @@ components:
           type: string
           format: uuid
           nullable: true
-          example: "2daa2481-9d7c-46fb-99a8-a3811816a849"
+          example: "f4a5b6c7-d8e9-4f0a-1b2c-3d4e5f6a7b8c"
         id:
           type: string
           nullable: true
@@ -884,7 +884,7 @@ components:
           type: string
           format: uuid
           description: ID of the shipment to share
-          example: "3dd35e1d-d984-4b09-9d8e-0214f35db444"
+          example: "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
         show_product_details:
           type: boolean
           description: Whether to display product details
@@ -927,7 +927,7 @@ components:
             id:
               type: string
               format: uuid
-              example: "e7db33e8-5ec4-4026-862c-4cd5348eb579"
+              example: "b8c9d0e1-f2a3-4b4c-5d6e-7f8a9b0c1d2e"
             created_at:
               type: string
               format: date-time
@@ -943,7 +943,7 @@ components:
             token:
               type: string
               format: uuid
-              example: "df4bb109-784c-4149-a054-ecf654896b56"
+              example: "c9d0e1f2-a3b4-4c5d-6e7f-8a9b0c1d2e3f"
             show_product_details:
               type: boolean
               example: false
@@ -962,10 +962,10 @@ components:
             shipment:
               type: string
               format: uuid
-              example: "3dd35e1d-d984-4b09-9d8e-0214f35db444"
+              example: "c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f"
             url:
               type: string
-              example: "https://zoomlogi.com/share/shipment/external-view/3dd35e1d-d984-4b09-9d8e-0214f35db444/a8faa7f5-6750-4682-ae1a-a938b3b419e2"
+              example: "https://zoomlogi.com/share/shipment/external-view/c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f/a3b4c5d6-e7f8-4a9b-0c1d-2e3f4a5b6c7d"
 
     # --- Shipment alert (inline on create) ---
     ShipmentAlertCreate:
@@ -1440,7 +1440,7 @@ components:
         alert_id:
           type: string
           format: uuid
-          example: "fd3cda6a-f6a2-477a-8e66-1f365a9c5a8e"
+          example: "f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c"
         status:
           type: string
           enum: [IN_PROGRESS, CLOSED]
@@ -1509,7 +1509,7 @@ components:
           items:
             type: string
             format: uuid
-          example: ["23a0293c-615e-4e91-9aaf-6b14af38d678"]
+          example: ["d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"]
         frequency:
           type: string
           enum: [ONCE_A_DAY, TWICE_A_DAY, EVERY_HOUR]
@@ -1728,7 +1728,7 @@ components:
         company_id:
           type: string
           format: uuid
-          example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+          example: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
         couriers:
           type: array
           items:
@@ -1740,7 +1740,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "829d18ff-30ab-4899-8305-7a97eee260c3"
+          example: "c5d6e7f8-a9b0-4c1d-2e3f-4a5b6c7d8e9f"
         courier_name:
           type: string
           example: "FedEx"
@@ -1768,7 +1768,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "4835dc3f-a68d-4f39-a7f9-1710c4f4171d"
+          example: "b0c1d2e3-f4a5-4b6c-7d8e-9f0a1b2c3d4e"
         name:
           type: string
           example: "Default"
@@ -1806,11 +1806,11 @@ components:
         id:
           type: string
           format: uuid
-          example: "4b319c91-0dca-4b89-b64f-5fcb0219f7dd"
+          example: "f8a9b0c1-d2e3-4f4a-5b6c-7d8e9f0a1b2c"
         company:
           type: string
           format: uuid
-          example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+          example: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
         sensor_name:
           type: string
           example: "Tive"
@@ -1913,7 +1913,7 @@ components:
         product_type:
           type: string
           format: uuid
-          example: "fd98dab0-2488-475c-843f-601c1c0d5895"
+          example: "e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b"
         stage_of_development:
           type: string
           example: "Clinical Stage 3"
@@ -1979,7 +1979,7 @@ components:
             type: string
             format: uuid
           example:
-            - "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+            - "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
         id:
           type: string
           format: uuid
@@ -1996,7 +1996,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "23a0293c-615e-4e91-9aaf-6b14af38d678"
+          example: "d4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a"
         name:
           type: string
           example: "Samples"
@@ -2007,7 +2007,7 @@ components:
         product_type:
           type: string
           format: uuid
-          example: "53566072-cddb-41bc-bb02-b9cc0212f474"
+          example: "d6e7f8a9-b0c1-4d2e-3f4a-5b6c7d8e9f0a"
         temperature_min:
           type: string
           example: "-40.00"
@@ -2031,7 +2031,7 @@ components:
             id:
               type: string
               format: uuid
-              example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+              example: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
             name:
               type: string
               example: "ACME Corp"
@@ -2112,7 +2112,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+          example: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
         name:
           type: string
           example: "Oncology"
@@ -2274,7 +2274,7 @@ components:
             type: string
             format: uuid
           example:
-            - "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+            - "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
         id:
           type: string
           nullable: true
@@ -2286,7 +2286,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "33a49369-1d03-4836-b24f-289036baee99"
+          example: "e3f4a5b6-c7d8-4e9f-0a1b-2c3d4e5f6a7b"
         contacts:
           type: array
           items:
@@ -2297,7 +2297,7 @@ components:
             id:
               type: string
               format: uuid
-              example: "51912b6f-dde1-41ce-b803-2925712b89f5"
+              example: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"
             name:
               type: string
               example: "0416admin"
@@ -2403,7 +2403,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "73fac151-c3d5-44c5-b823-f7ff26a1f61b"
+          example: "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d"
         name:
           type: string
           example: "Team Member"
@@ -2432,7 +2432,7 @@ components:
           format: uuid
           nullable: true
           description: Optional UUID of the device
-          example: "bd93dcc4-3cc9-473f-973f-24242b657171"
+          example: "f2a3b4c5-d6e7-4f8a-9b0c-1d2e3f4a5b6c"
         manufacturer:
           type: string
           nullable: true
@@ -2486,7 +2486,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "d982404f-bbac-4ebd-af6d-92d18c06191e"
+          example: "e1f2a3b4-c5d6-4e7f-8a9b-0c1d2e3f4a5b"
         created_at:
           type: string
           format: date-time
@@ -2523,7 +2523,7 @@ components:
         company:
           type: string
           format: uuid
-          example: "5065511e-85e2-479c-a9a1-f8cac619b74b"
+          example: "e7f8a9b0-c1d2-4e3f-4a5b-6c7d8e9f0a1b"
         product:
           type: string
           format: uuid
@@ -2597,7 +2597,7 @@ components:
         id:
           type: string
           format: uuid
-          example: "06b135e5-2ea7-4171-93c2-01eb9ed5f443"
+          example: "a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d"
         name:
           type: string
           example: "Chicago Hospital"
@@ -2651,7 +2651,7 @@ components:
         sensor_id:
           type: string
           format: uuid
-          example: "87f76401-3f52-4d30-aa5f-c6d7182dc318"
+          example: "b4c5d6e7-f8a9-4b0c-1d2e-3f4a5b6c7d8e"
         type:
           type: string
           example: "Tive"
@@ -2663,7 +2663,7 @@ components:
           type: string
           format: uuid
           nullable: true
-          example: "f777b66c-6909-40d7-8c87-21b9e0c6f073"
+          example: "a7b8c9d0-e1f2-4a3b-4c5d-6e7f8a9b0c1d"
         name:
           type: string
           example: "CoolPharma Vaccine"
