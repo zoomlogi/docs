@@ -7,6 +7,15 @@ info:
     alert management, as well as management of couriers, sensors, products and locations.
     
     
+    ## Base URL
+    
+    
+    | Environment | Base URL |
+    |-------------|----------|
+    | **Production** | `https://app.zoomlogi.com/api` |
+    | **Sandbox** | `https://uat.zoomlogi.com/api` |
+    
+    
     ## Authentication
     
     All API requests require authentication using an API key.
