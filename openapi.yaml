@@ -1,21 +1,48 @@
 openapi: 3.0.3
 info:
   title: ZoomLogi API
-  version: "1.0.1"
+  version: "1.1.0"
   description: >
-    The ZoomLogi API provides endpoints for authentication, shipment creation & tracking,
+    The ZoomLogi API provides endpoints for shipment creation & tracking,
     alert management, as well as management of couriers, sensors, products and locations.
+    
+    
+    ## Authentication
+    
+    All API requests require authentication using an API key.
+    
+    
+    ### Getting Your API Key
+    
+    Contact your ZoomLogi representative to obtain your API key.
+    
+    
+    ### Using Your API Key
+    
+    Include your API key in the `X-API-Key` header with every request:
+    
+    ```
+    X-API-Key: your_api_key_here
+    ```
+    
+    
+    ### Example Request
+    
+    ```bash
+    curl -X GET "https://app.zoomlogi.com/api/shipment/" \
+      -H "X-API-Key: your_api_key_here"
+    ```
 servers:
-  - url: https://zoomlogi.com/api
+  - url: https://app.zoomlogi.com/api
     description: Production Server
   - url: https://uat.zoomlogi.com/api
     description: Sandbox Server (Testing)
 
 tags:
-  - name: Authentication
-    description: Endpoints for obtaining access and refresh tokens.
   - name: Shipments
     description: Endpoints for shipment creation, retrieval and tracking.
+  - name: Serial Numbers
+    description: Endpoints for serial number activation and management.
   - name: Alerts
     description: Endpoints for managing alert configurations and intervention.
   - name: Transport Providers
@@ -26,48 +53,11 @@ tags:
     description: Endpoints for location management.
 
 paths:
-  /auth/token/:
-    post:
-      tags: [Authentication]
-      summary: Obtain a ZoomLogi access token (user or client)
-      description: |
-        This endpoint can be used for:
-        - **Client login** using client_id and client_secret (Client Credentials flow).
-        - **User login** using email and password (Resource Owner Password Credentials flow).
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - $ref: '#/components/schemas/ClientCredentialsRequest'   # <-- move client credentials first
-                - $ref: '#/components/schemas/TokenRequest'
-            examples:
-              ClientCredentialsExample:
-                summary: Client login (recommended)
-                value:
-                  client_id: "client_id"
-                  client_secret: "client_secret"
-              UserLoginExample:
-                summary: User login (alternative)
-                value:
-                  email: "user@example.com"
-                  password: "password123"
-      responses:
-        '200':
-          description: Token returned successfully.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TokenResponse'
-        '400':
-          description: Invalid credentials supplied.
-
   /company-transport-provider-details/:
     get:
       tags: [Transport Providers]
       summary: List couriers configured for the current company
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       responses:
         '200':
           description: A wrapped list of couriers.
@@ -82,7 +72,7 @@ paths:
     get:
       tags: [Sensors]
       summary: List sensors configured for the current company
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       responses:
         '200':
           description: Wrapped list of sensors.
@@ -95,7 +85,7 @@ paths:
     get:
       tags: [Locations]
       summary: List or search locations
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: query
           name: name
@@ -114,7 +104,7 @@ paths:
     post:
       tags: [Locations]
       summary: Create a new location
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -133,7 +123,7 @@ paths:
     delete:
       tags: [Locations]
       summary: Archive a location
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: path
           name: location_id
@@ -147,7 +137,7 @@ paths:
     get:
       tags: [Products]
       summary: List or search products
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       responses:
         '200':
           description: Wrapped list of products.
@@ -159,7 +149,7 @@ paths:
     post:
       tags: [Products]
       summary: Create a new product
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -178,7 +168,7 @@ paths:
     delete:
       tags: [Products]
       summary: Archive a product
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: path
           name: product_id
@@ -192,7 +182,7 @@ paths:
     get:
       tags: [Alerts]
       summary: Retrieve alert threshold settings
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       responses:
         '200':
           description: Retrieved alert thresholds successfully.
@@ -204,7 +194,7 @@ paths:
     post:
       tags: [Alerts]
       summary: Update alert threshold settings
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -223,7 +213,7 @@ paths:
     post:
       tags: [Alerts]
       summary: Initiate AI intervention for an alert
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: path
           name: alert_id
@@ -248,7 +238,7 @@ paths:
     get:
       tags: [Alerts]
       summary: Retrieve AI intervention status and result
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: path
           name: alert_id
@@ -269,7 +259,7 @@ paths:
     get:
       tags: [Alerts]
       summary: List alert configurations for your company
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       responses:
         '200':
           description: Wrapped list of alerts.
@@ -281,7 +271,7 @@ paths:
     post:
       tags: [Alerts]
       summary: Create or update a company alert configuration
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -300,7 +290,7 @@ paths:
     delete:
       tags: [Alerts]
       summary: Delete an alert configuration
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: path
           name: alert_id
@@ -336,7 +326,7 @@ paths:
         - `scheduled_delivery_date` (Date range; JSON with `start` and `end`)
         - `courier` (UUID of the courier)
       security:
-        - OAuth2: []
+        - APIKeyAuth: []
       parameters:
         - name: filterBy
           in: query
@@ -387,7 +377,7 @@ paths:
       description: |
         Retrieves a full shipment record, including chain of custody, alerts, shipment polyline, shipment monitor and more.
       security:
-        - OAuth2: []
+        - APIKeyAuth: []
       parameters:
         - in: path
           name: reference_number
@@ -410,7 +400,7 @@ paths:
     post:
       tags: [Shipments]
       summary: Create and begin tracking a shipment
-      security: [{ OAuth2: [] }]
+      security: [{ APIKeyAuth: [] }]
       requestBody:
         required: true
         content:
@@ -429,7 +419,7 @@ paths:
     post:
       tags: [Shipments]
       summary: Create a shareable shipment link
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -448,7 +438,7 @@ paths:
     delete:
       tags: [Shipments]
       summary: Archive an existing shipment
-      security: [ { OAuth2: [] } ]
+      security: [ { APIKeyAuth: [] } ]
       parameters:
         - in: path
           name: shipment_id
@@ -461,60 +451,84 @@ paths:
         '204':
           description: Shipment archived successfully. No content returned.
 
+  /shipment/activate-serial-number/:
+    post:
+      tags: [Serial Numbers]
+      summary: Activate a serial number
+      description: |
+        Activates a serial number for tracking. The serial number must exist in your company
+        and must not have been previously activated.
+      security: [ { APIKeyAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SerialNumberActivationRequest'
+            example:
+              activation_timestamp: "2026-01-12T10:51:21"
+              serial_number: "ABC123"
+      responses:
+        '200':
+          description: Serial number activated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialNumberActivationResponse'
+        '400':
+          description: Bad request - serial number not found or already activated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SerialNumberActivationError'
+              examples:
+                not_found:
+                  summary: Serial number not found
+                  value:
+                    data:
+                      message: "serial_number: Serial number not found in this company"
+                      status: 400
+                      is_success: false
+                      messageTypeId: "Failure"
+                      data:
+                        response: []
+                    message:
+                      text: ""
+                      title: ""
+                      messageTypeId: "Failure"
+                already_activated:
+                  summary: Serial number already activated
+                  value:
+                    data:
+                      message: "serial_number: Serial number already activated!"
+                      status: 400
+                      is_success: false
+                      messageTypeId: "Failure"
+                      data:
+                        response: []
+                    message:
+                      text: ""
+                      title: ""
+                      messageTypeId: "Failure"
+        '401':
+          description: Unauthorized. API key or JWT token required.
+        '500':
+          description: Internal server error.
+
 components:
   securitySchemes:
-    OAuth2:
-      type: oauth2
-      flows:
-        clientCredentials:
-          tokenUrl: https://zoomlogi.com/api/auth/token/
-          scopes: {}
+    APIKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key for authentication. Contact your ZoomLogi representative or 
+        support@zoomlogi.com to obtain your API key.
 
   schemas:
 
     # ====================================================
-    # 1. Authentication (tag order)
-    # ====================================================
-
-    ClientCredentialsRequest:
-      type: object
-      properties:
-        client_id:
-          type: string
-          example: "client_id"
-        client_secret:
-          type: string
-          example: "client_secret"
-      required: [client_id, client_secret]
-
-    TokenRequest:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-          example: "user@example.com"
-        password:
-          type: string
-          example: "strongpassword"
-      required: [email, password]
-
-    TokenResponse:
-      type: object
-      properties:
-        message:
-          type: string
-        is_success:
-          type: boolean
-        messageTypeId:
-          type: string
-        refresh:
-          type: string
-        access:
-          type: string
-
-    # ====================================================
-    # 2. Shipments
+    # 1. Shipments
     #    (ordered by endpoint usage)
     # ====================================================
 
@@ -1284,7 +1298,7 @@ components:
                 $ref: '#/components/schemas/ShipmentMonitor'
 
     # ====================================================
-    # 3. Alerts
+    # 2. Alerts
     # ====================================================
 
     ThresholdSettingsRequest:
@@ -1684,7 +1698,7 @@ components:
                 type: string
 
     # ====================================================
-    # 4. Transport Providers
+    # 3. Transport Providers
     # ====================================================
 
     CompanyTransportProviderResponse:
@@ -1760,7 +1774,7 @@ components:
           example: "Default"
 
     # ====================================================
-    # 5. Sensors
+    # 4. Sensors
     # ====================================================
 
     CompanySensorsResponse:
@@ -1822,7 +1836,7 @@ components:
           $ref: '#/components/schemas/Permissions'
 
     # ====================================================
-    # 6. Products
+    # 5. Products
     # ====================================================
 
     CompanyProductsResponse:
@@ -2104,7 +2118,7 @@ components:
           example: "Oncology"
 
     # ====================================================
-    # 7. Locations
+    # 6. Locations
     # ====================================================
 
     CompanyLocationsResponse:
@@ -2393,6 +2407,166 @@ components:
         name:
           type: string
           example: "Team Member"
+
+    # ====================================================
+    # 7. Serial Numbers
+    # ====================================================
+
+    SerialNumberActivationRequest:
+      type: object
+      required:
+        - activation_timestamp
+        - serial_number
+      properties:
+        activation_timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the serial number should be activated
+          example: "2026-01-12T10:51:21"
+        serial_number:
+          type: string
+          description: The serial number to activate
+          example: "ABC123"
+        device_uuid:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional UUID of the device
+          example: "bd93dcc4-3cc9-473f-973f-24242b657171"
+        manufacturer:
+          type: string
+          nullable: true
+          description: Optional manufacturer name
+          example: "Apple"
+        product_name:
+          type: string
+          nullable: true
+          description: Optional product name
+          example: "IPHONE-STANDARD"
+
+    SerialNumberActivationResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Serial number activated!"
+            status:
+              type: integer
+              example: 200
+            is_success:
+              type: boolean
+              example: true
+            messageTypeId:
+              type: string
+              example: "Success"
+            data:
+              $ref: '#/components/schemas/SerialNumberActivationData'
+            page_count:
+              type: integer
+              example: 1
+        message:
+          type: object
+          properties:
+            text:
+              type: string
+              example: ""
+            title:
+              type: string
+              example: ""
+            messageTypeId:
+              type: string
+              example: "Success"
+
+    SerialNumberActivationData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d982404f-bbac-4ebd-af6d-92d18c06191e"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-13T22:43:18.569710Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-01-13T22:43:18.569723Z"
+        is_archived:
+          type: boolean
+          example: false
+        activation_timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-12T10:51:21Z"
+        serial_number:
+          type: string
+          example: "ABC123_20260112"
+        device_uuid:
+          type: string
+          format: uuid
+          nullable: true
+          example: null
+        manufacturer:
+          type: string
+          nullable: true
+          example: null
+        created_by:
+          type: integer
+          example: 47
+        updated_by:
+          type: integer
+          example: 47
+        company:
+          type: string
+          format: uuid
+          example: "5065511e-85e2-479c-a9a1-f8cac619b74b"
+        product:
+          type: string
+          format: uuid
+          nullable: true
+          example: null
+
+    SerialNumberActivationError:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "serial_number: Serial number not found in this company"
+            status:
+              type: integer
+              example: 400
+            is_success:
+              type: boolean
+              example: false
+            messageTypeId:
+              type: string
+              example: "Failure"
+            data:
+              type: object
+              properties:
+                response:
+                  type: array
+                  items: {}
+                  example: []
+        message:
+          type: object
+          properties:
+            text:
+              type: string
+              example: ""
+            title:
+              type: string
+              example: ""
+            messageTypeId:
+              type: string
+              example: "Failure"
 
     # ====================================================
     # 8. Common / Shared
