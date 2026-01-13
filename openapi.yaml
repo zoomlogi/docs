@@ -10,10 +10,10 @@ info:
     ## Base URL
     
     
-    | Environment | Base URL |
-    |-------------|----------|
-    | **Production** | `https://app.zoomlogi.com/api` |
-    | **Sandbox** | `https://uat.zoomlogi.com/api` |
+    **Production:** `https://app.zoomlogi.com/api`
+    
+    
+    **Sandbox:** `https://uat.zoomlogi.com/api`
     
     
     ## Authentication
