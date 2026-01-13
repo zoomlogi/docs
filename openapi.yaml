@@ -2504,7 +2504,7 @@ components:
           example: "2026-01-12T10:51:21Z"
         serial_number:
           type: string
-          example: "ABC123_20260112"
+          example: "ABC123"
         device_uuid:
           type: string
           format: uuid
