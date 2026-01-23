@@ -50,6 +50,8 @@ servers:
 tags:
   - name: Shipments
     description: Endpoints for shipment creation, retrieval and tracking.
+  - name: Integrations
+    description: Endpoints for bulk data upload and integration with external systems.
   - name: Serial Numbers
     description: Endpoints for serial number activation and management.
   - name: Alerts
@@ -459,6 +461,75 @@ paths:
       responses:
         '204':
           description: Shipment archived successfully. No content returned.
+
+  /integrations/shipmentswrite/:
+    post:
+      tags: [Integrations]
+      summary: Upload shipment data via integration
+      description: |
+        This endpoint is designed to accept non-standard payloads containing shipment data from 
+        customers to facilitate the building of shipments within ZoomLogi.
+        
+        The endpoint accepts any valid JSON format. Users of this endpoint should have worked 
+        with their ZoomLogi representative to agree upon a payload structure before sending 
+        data to this endpoint.
+        
+        **Important:** Contact your ZoomLogi representative to establish and document the 
+        JSON schema for your integration before using this endpoint.
+      security: [ { APIKeyAuth: [] } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |
+                A valid JSON object. The structure is agreed upon with ZoomLogi before using the API.
+              additionalProperties: true
+      responses:
+        '200':
+          description: Shipment data uploaded successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentsWriteSuccessResponse'
+        '400':
+          description: Bad request - invalid JSON format or empty request body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentsWriteErrorResponse'
+              examples:
+                invalid_json:
+                  summary: Invalid JSON format
+                  value:
+                    data:
+                      message: "Invalid JSON format"
+                      status: 400
+                      is_success: false
+                      messageTypeId: "Failure"
+                      data:
+                        response: []
+                    message:
+                      text: ""
+                      title: ""
+                      messageTypeId: "Failure"
+                empty_body:
+                  summary: Empty request body
+                  value:
+                    data:
+                      message: "Request body cannot be empty"
+                      status: 400
+                      is_success: false
+                      messageTypeId: "Failure"
+                      data:
+                        response: []
+                    message:
+                      text: ""
+                      title: ""
+                      messageTypeId: "Failure"
+        '401':
+          description: Unauthorized. API key required.
 
   /shipment/activate-serial-number/:
     post:
@@ -2418,7 +2489,90 @@ components:
           example: "Team Member"
 
     # ====================================================
-    # 7. Serial Numbers
+    # 7. Integrations
+    # ====================================================
+
+    ShipmentsWriteSuccessResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Shipment data uploaded successfully"
+            status:
+              type: integer
+              example: 200
+            is_success:
+              type: boolean
+              example: true
+            messageTypeId:
+              type: string
+              example: "Success"
+            data:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  description: Unique filename assigned to the uploaded data
+                  example: "5065511e-85e2-479c-a9a1-f8cac619b74b_1769191764.json"
+            page_count:
+              type: integer
+              example: 1
+        message:
+          type: object
+          properties:
+            text:
+              type: string
+              example: ""
+            title:
+              type: string
+              example: ""
+            messageTypeId:
+              type: string
+              example: "Success"
+
+    ShipmentsWriteErrorResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Invalid JSON format"
+            status:
+              type: integer
+              example: 400
+            is_success:
+              type: boolean
+              example: false
+            messageTypeId:
+              type: string
+              example: "Failure"
+            data:
+              type: object
+              properties:
+                response:
+                  type: array
+                  items: {}
+                  example: []
+        message:
+          type: object
+          properties:
+            text:
+              type: string
+              example: ""
+            title:
+              type: string
+              example: ""
+            messageTypeId:
+              type: string
+              example: "Failure"
+
+    # ====================================================
+    # 8. Serial Numbers
     # ====================================================
 
     SerialNumberActivationRequest:
@@ -2578,7 +2732,7 @@ components:
               example: "Failure"
 
     # ====================================================
-    # 8. Common / Shared
+    # 9. Common / Shared
     # ====================================================
 
     Permissions:
